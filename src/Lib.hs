@@ -28,42 +28,35 @@ import GHC.Generics
 import Control.Monad.STM           (atomically)
 import Control.Monad.Trans.Reader  (ReaderT, ask, runReaderT)
 import Control.Concurrent.STM.TVar (TVar, newTVar, readTVar, writeTVar)
+import Types
 
-data Book 
-  = Book {
-  bookId :: Int,
-  bookName :: String
-}
-  deriving (Eq, Show, Generic)
-instance ToJSON Book
-instance FromJSON Book
+type GetGame = "get" :> Capture "gameId" Int :> Get '[JSON] (Maybe Game)
+type AddGame = "post" :> ReqBody '[JSON] Game :> PostCreated '[JSON] Game
+type API = (GetGame :<|> AddGame)
 
-type GetBooks = "get" :> Capture "bookId" Int :> Get '[JSON] (Maybe Book)
-type AddBook = "post" :> ReqBody '[JSON] Book :> PostCreated '[JSON] Book
-type BooksAPI = (GetBooks :<|> AddBook)
-
-api :: Proxy BooksAPI
+api :: Proxy API
 api = Proxy
 
 data State = State
-  { books :: TVar [Book]
+  {
+  games :: TVar [Game]
   }
 
 type AppM = ReaderT State Handler
 
-server :: ServerT BooksAPI AppM
+server :: ServerT API AppM
 server = getBooks :<|> addBook
-  where getBooks :: Int -> AppM (Maybe Book)
+  where getBooks :: Int -> AppM (Maybe Game)
         getBooks findId = do
-          State{books = p} <- ask
+          State{games = p} <- ask
           item <- liftIO $ atomically $ readTVar p
-          return $ findBook findId item
+          return $ findGame findId item
 
-        addBook :: Book -> AppM Book
-        addBook book = do
-          State{books = p} <- ask
-          liftIO $ atomically $ readTVar p >>= writeTVar p . (book :)
-          return book
+        addBook :: Game -> AppM Game
+        addBook game = do
+          State{games = p} <- ask
+          liftIO $ atomically $ readTVar p >>= writeTVar p . (game :)
+          return game
 
 nt :: State -> AppM a -> Handler a
 nt s x = runReaderT x s
@@ -81,8 +74,8 @@ run = do
   initialBooks <- atomically $ newTVar []
   runSettings settings $ app $ State initialBooks
 
-findBook :: Int -> [Book] -> Maybe Book
-findBook _ [] = Nothing
-findBook findId (book:books)
-  | findId == (bookId book) = Just book
-  | otherwise = findBook findId books
+findGame :: Int -> [Game] -> Maybe Game
+findGame _ [] = Nothing
+findGame findId (game:games)
+  | findId == (gameId game) = Just game
+  | otherwise = findGame findId games

@@ -1,0 +1,14 @@
+<div *ngIf="!isSizeSelected">
+  Select board size
+  <pre>
+  <input type="text"  #titleInput>
+  <button type="submit" (click) = 'selectSize(titleInput.value)'>Confirm</button>
+</pre>
+</div>
+
+<div *ngIf="isSizeSelected">
+  <div [ngStyle]="{'padding-left': (25*(fieldSize-i))+'px'}" class="row" *ngFor="let row of field; let i = index">
+    <div class="circle" *ngFor="let c of row"></div>
+  </div>
+</div>
+

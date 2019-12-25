@@ -2,7 +2,7 @@ name:                newGame
 version:             0.1.0.0
 github:              "githubuser/newGame"
 license:             BSD3
-author:              "Author name here"
+author:              "Murrelken"
 maintainer:          "example@example.com"
 copyright:           "2019 Author name here"
 
@@ -21,6 +21,20 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- servant
+- servant-server
+- transformers
+- aeson
+- wai
+- warp
+- directory
+- random
+- tasty
+- tasty-hunit
+- servant-client
+- hspec
+- stm
+- http-client
 
 library:
   source-dirs: src

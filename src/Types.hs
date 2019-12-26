@@ -56,7 +56,8 @@ instance FromJSON Field
 data PlayerAndGameInfo
   = PlayerAndGameInfo {
     gameNumber :: Int,
-    givenPlayerNumber :: Int
+    givenPlayerNumber :: Int,
+    fieldSize :: Int
   }
   deriving (Eq, Show, Generic)
 

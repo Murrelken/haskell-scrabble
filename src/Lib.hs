@@ -89,7 +89,7 @@ server =
               Nothing -> throwError err422
               Just gameObj -> do
                 liftIO $ atomically $ swapTVar p newItems
-                return $ PlayerAndGameInfo (gameId gameObj) 1
+                return $ PlayerAndGameInfo (gameId gameObj) 2 (size $ gameField gameObj)
 
         createGame :: Int -> AppM PlayerAndGameInfo
         createGame size = do
@@ -97,7 +97,7 @@ server =
           items <- liftIO $ atomically $ readTVar p
           let newGame = Game (findLastId items) (ResponseForWhileTrue False 1 1) (Field size)
           liftIO $ atomically $ readTVar p >>= writeTVar p . (newGame :)
-          return $ PlayerAndGameInfo (gameId newGame) 1
+          return $ PlayerAndGameInfo (gameId newGame) 1 size
 
 changeGames :: Int -> [Game] -> [Game]
 changeGames _ [] = []

@@ -37,7 +37,6 @@ export class HomeComponent implements OnInit {
   getAllGames() {
     this.http.get<any>('api/getAll')
       .subscribe(x => {
-        console.log(x)
         this.games = x;
       });
   }
@@ -53,6 +52,8 @@ export class HomeComponent implements OnInit {
     console.log(size);
     this.http.post<any>(`api/createGame/${size}`, null)
       .subscribe(x => {
+        this.gameNumber = x.gameNumber;
+        this.playerNumber = x.givenPlayerNumber;
           console.log(x);
         }
       );
@@ -62,7 +63,6 @@ export class HomeComponent implements OnInit {
     let whileTrue = setInterval(() => {
       this.http.get<any>(`api/checkState/${this.gameNumber}`)
         .subscribe(x => {
-
         });
     }, 1000);
   }
@@ -70,12 +70,14 @@ export class HomeComponent implements OnInit {
   chooseGame(gameId) {
     this.isGameSelected = true;
     this.isNewGame = false;
-    this.http.post(`api/connectToGame/${gameId}`, null)
+    this.http.post<any>(`api/connectToGame/${gameId}`, null)
       .subscribe(x => {
         console.log(x);
+        this.gameNumber = x.gameNumber;
+        this.playerNumber = x.givenPlayerNumber;
+        this.fieldSize = x.fieldSize;
+        this.initializeField(this.fieldSize);
       });
-    // this.fieldSize = size;
-    // this.initializeField(size);
   }
 
   newGame() {

@@ -63,3 +63,6 @@ changeRow :: Int -> Char -> String -> String
 changeRow y l (cell:cells)
   | y == 0 = l : cells
   | otherwise = cell : changeRow (y - 1) l cells
+
+isTurnAvailable :: Changes -> Field -> Bool
+isTurnAvailable (Changes x y _) (Field _ board) = (board !! x) !! y == 'n'

@@ -136,14 +136,17 @@ server =
           let (MakeTurnChanges _ (PlayerAndGameInfo gameNumber playerNumber _)) = changes
           State{games = p} <- ask
           items <- liftIO $ atomically $ readTVar p
-          let check = Just Bool
-          case check of
+          let game = findGame gameNumber items
+          case game of
               Nothing -> throwError err422
-              Just newItemsObj -> do
-                let newItems = changeBoardState changes items
-                liftIO $ atomically $ swapTVar p newItems
-                return ()
-
+              Just gameObj -> do
+                let check = isTurnAvailable (turnChanges changes) (gameField gameObj)
+                if check == True
+                  then do
+                    let newItems = changeBoardState changes items
+                    liftIO $ atomically $ swapTVar p newItems
+                    return ()
+                  else throwError err422
 
 nt :: State -> AppM a -> Handler a
 nt s x = runReaderT x s

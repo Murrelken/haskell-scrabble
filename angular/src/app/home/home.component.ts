@@ -136,9 +136,6 @@ export class HomeComponent implements OnInit {
   }
 
   changeColor(x: number, y: number, l) {
-    console.log(this.field)
-    console.log(x)
-    console.log(y)
     this.field[x][y] = l;
   }
 }

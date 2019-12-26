@@ -8,7 +8,7 @@ import {HttpClient} from '@angular/common/http';
 })
 export class HomeComponent implements OnInit {
 
-  fieldSize = 0;
+  fieldSize: number = 0;
   field = [];
   isNewGame = false;
   isGameSelected = false;
@@ -74,6 +74,10 @@ export class HomeComponent implements OnInit {
               clearInterval(whileTrue);
               this.isYourTurn = true;
             }
+
+            this.changeColor(x.changes.positionX, x.changes.positionY, `${x.changes.playerNumber}`);
+
+            this.playerTurnNumber = x.playerTurnNumber;
           } else if (x.isGameStarted) {
             this.isGameStarted = true;
           }
@@ -108,7 +112,33 @@ export class HomeComponent implements OnInit {
       });
   }
 
-  clickField(i: number, ii: number) {
-    console.log(i, ii);
+  clickField(x: number, y: number) {
+    if (this.isYourTurn) {
+      this.http.post<any>(`api/makeTurn`, {
+        turnChanges: {
+          positionX: x,
+          positionY: y,
+          playerNumber: `${this.playerNumber}`
+        },
+        turnInfo: {
+          gameNumber: this.gameNumber,
+          givenPlayerNumber: this.playerNumber,
+          fieldSize: 0
+        }
+      }).subscribe(_ => {
+        this.changeColor(x, y, `${this.playerNumber}`);
+        this.isYourTurn = false;
+        this.startListening();
+      }, err => {
+        alert('You cn\'t make this turn')
+      });
+    }
+  }
+
+  changeColor(x: number, y: number, l) {
+    console.log(this.field)
+    console.log(x)
+    console.log(y)
+    this.field[x][y] = l;
   }
 }

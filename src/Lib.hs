@@ -136,11 +136,11 @@ server =
           let (MakeTurnChanges _ (PlayerAndGameInfo gameNumber playerNumber _)) = changes
           State{games = p} <- ask
           items <- liftIO $ atomically $ readTVar p
-          let newItems = changeBoardState changes items
           let check = Just Bool
           case check of
               Nothing -> throwError err422
               Just newItemsObj -> do
+                let newItems = changeBoardState changes items
                 liftIO $ atomically $ swapTVar p newItems
                 return ()
 

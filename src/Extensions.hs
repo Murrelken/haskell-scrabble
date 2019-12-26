@@ -40,7 +40,7 @@ generateRow n = 'n':generateRow (n - 1)
 
 changeBoardState :: MakeTurnChanges -> [Game] -> [Game]
 changeBoardState makeTurnChanges ((Game id (ResponseForWhileTrue isStarted playersTurn playersCount changes) field):gs)
-  | (gameNumber (turnInfo makeTurnChanges)) == id = (Game id (ResponseForWhileTrue isStarted playersTurn playersCount changes) (setChanges (turnChanges makeTurnChanges) field)) : gs
+  | (gameNumber (turnInfo makeTurnChanges)) == id = (Game id (ResponseForWhileTrue isStarted (getNextPlayer playersTurn) playersCount (turnChanges makeTurnChanges)) (setChanges (turnChanges makeTurnChanges) field)) : gs
   | otherwise = (Game id (ResponseForWhileTrue isStarted playersTurn playersCount changes) field) : changeBoardState makeTurnChanges gs
 
 setChanges :: Changes -> Field -> Field
@@ -54,6 +54,10 @@ changeBoard (Changes x y l) (row:rows)
   | x == 0 = (changeRow y l row) : rows
   | otherwise = row : changeBoard (Changes (x - 1) y l) rows
 
+getNextPlayer :: Int -> Int
+getNextPlayer playerTurnNumber
+    | playerTurnNumber == 2 = 1
+    | otherwise = playerTurnNumber + 1
 
 changeRow :: Int -> Char -> String -> String
 changeRow y l (cell:cells)

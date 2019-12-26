@@ -7,14 +7,36 @@
   <div *ngIf="isNewGame">
     Select board size
     <pre>
-  <input type="text"  #titleInput>
-  <button type="submit" (click) = 'selectSize(titleInput.value)'>Confirm</button>
-</pre>
+      <input type="text" #titleInput>
+      <button type="submit" (click)='selectSize(titleInput.value)'>Confirm</button>
+    </pre>
   </div>
 
-  <div *ngIf="!isNewGame">
+  <div *ngIf="!isNewGame && !isGameStarted">
+    Your game number is {{gameNumber}}
+    <div *ngIf="!isEnoughPlayers">
+      Waiting for players
+    </div>
+    <div *ngIf="isEnoughPlayers">
+      <button (click)="startGame()">Start game</button>
+    </div>
+  </div>
+
+  <div class="game" *ngIf="!isNewGame && isGameStarted">
     <div [ngStyle]="{'padding-left': (25*(fieldSize-i))+'px'}" class="row" *ngFor="let row of field; let i = index">
-      <div class="circle" *ngFor="let c of row"></div>
+      <div class="circle"
+           [ngClass]="{'none': c=='n', 'white': c=='w', 'black': c=='b'}"
+           (click)="clickField(i, ii)"
+           *ngFor="let c of row; let ii = index"></div>
+    </div>
+    <div>
+      <div>You're Player{{playerNumber}}</div>
+      <div *ngIf="isYourTurn">Your turn</div>
+      <div *ngIf="!isYourTurn">Waiting for another player's turn</div>
+    </div>
+    <div>
+      <div class="circle white"></div> Player 1 <br>
+      <div class="circle black"></div> Player 2 <br>
     </div>
   </div>
 </div>

@@ -29,6 +29,7 @@ import Control.Monad.STM           (atomically)
 import Control.Monad.Trans.Reader  (ReaderT, ask, runReaderT)
 import Control.Concurrent.STM.TVar (TVar, newTVar, readTVar, writeTVar, swapTVar)
 import Types
+import Extensions
 import qualified Data.Map.Strict as Map
 
 
@@ -37,12 +38,18 @@ type GetAllGames = "getAll" :> Get '[JSON] [Game]
 type AddGame = "post" :> ReqBody '[JSON] Game :> Post '[JSON] Game
 type ConnectToGame = "connectToGame" :> Capture "gameNumber" Int :> Post '[JSON] PlayerAndGameInfo
 type CreateGame = "createGame" :> Capture "fieldSize" Int :> Post '[JSON] PlayerAndGameInfo
+type StartGame = "startGame" :> Capture "gameNumber" Int :> Post '[JSON] ()
+type CheckState = "checkState" :> Capture "gameNumber" Int :> Get '[JSON] ResponseForWhileTrue
+type MakeTurn = "makeTurn" :> ReqBody '[JSON] MakeTurnChanges :> Post '[JSON] ()
 type API = 
   GetGame :<|>
   GetAllGames :<|>
   AddGame :<|>
   ConnectToGame :<|>
-  CreateGame
+  CreateGame :<|>
+  StartGame :<|>
+  CheckState :<|>
+  MakeTurn
 
 api :: Proxy API
 api = Proxy
@@ -60,18 +67,22 @@ server =
   getAllGames :<|>
   addGame :<|>
   connectToGame :<|>
-  createGame
+  createGame :<|>
+  startGame :<|>
+  checkState :<|>
+  makeTurn
 
   where getGame :: Int -> AppM (Maybe Game)
         getGame findId = do
           State{games = p} <- ask
-          item <- liftIO $ atomically $ readTVar p
-          return $ findGame findId item
+          items <- liftIO $ atomically $ readTVar p
+          return $ findGame findId items
 
         getAllGames :: AppM [Game]
         getAllGames = do
           State{games = p} <- ask
-          liftIO $ atomically $ readTVar p
+          games <- liftIO $ atomically $ readTVar p
+          return $ reverse $ returnOnlyAvailableGames games
 
         addGame :: Game -> AppM Game
         addGame game = do
@@ -95,15 +106,44 @@ server =
         createGame size = do
           State{games = p} <- ask
           items <- liftIO $ atomically $ readTVar p
-          let newGame = Game (findLastId items) (ResponseForWhileTrue False 1 1) (Field size)
+          let newGame = Game (findLastId items) (ResponseForWhileTrue False 1 1 (Changes 0 0 'n')) (Field size (reverse $ emptyBoard size))
           liftIO $ atomically $ readTVar p >>= writeTVar p . (newGame :)
           return $ PlayerAndGameInfo (gameId newGame) 1 size
 
-changeGames :: Int -> [Game] -> [Game]
-changeGames _ [] = []
-changeGames gameId ((Game id (ResponseForWhileTrue isStarted playersTurn playersCount) (Field size)):xs)
-  | gameId == id = (Game id (ResponseForWhileTrue isStarted playersTurn (playersCount + 1)) (Field size)) : xs
-  | otherwise = (Game id (ResponseForWhileTrue isStarted playersTurn playersCount) (Field size)) : changeGames gameId xs
+        startGame :: Int -> AppM ()
+        startGame gameNumber = do
+          State{games = p} <- ask
+          items <- liftIO $ atomically $ readTVar p
+          let newItems = startOneGame gameNumber items
+          let game = findGame gameNumber items
+          case game of
+              Nothing -> throwError err422
+              Just gameObj -> do
+                liftIO $ atomically $ swapTVar p newItems
+                return ()
+
+        checkState :: Int -> AppM ResponseForWhileTrue
+        checkState gameNumber = do
+          State{games = p} <- ask
+          items <- liftIO $ atomically $ readTVar p
+          let game = findGame gameNumber items
+          case game of
+              Nothing -> throwError err422
+              Just (Game _ responseForWhileTrue _) -> return responseForWhileTrue
+
+        makeTurn :: MakeTurnChanges -> AppM ()
+        makeTurn changes = do
+          let (MakeTurnChanges _ (PlayerAndGameInfo gameNumber playerNumber _)) = changes
+          State{games = p} <- ask
+          items <- liftIO $ atomically $ readTVar p
+          let newItems = changeBoardState changes items
+          let check = Just Bool
+          case check of
+              Nothing -> throwError err422
+              Just newItemsObj -> do
+                liftIO $ atomically $ swapTVar p newItems
+                return ()
+
 
 nt :: State -> AppM a -> Handler a
 nt s x = runReaderT x s
@@ -120,13 +160,3 @@ run = do
         defaultSettings
   initialBooks <- atomically $ newTVar []
   runSettings settings $ app $ State initialBooks
-
-findGame :: Int -> [Game] -> Maybe Game
-findGame _ [] = Nothing
-findGame findId (game:games)
-  | findId == (gameId game) = Just game
-  | otherwise = findGame findId games
-
-findLastId :: [Game] -> Int
-findLastId [] = 1
-findLastId (game:games) = (+) 1 $ gameId game

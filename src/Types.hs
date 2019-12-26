@@ -16,10 +16,12 @@ instance FromJSON Book
 
 data Game
   = Game {
-  gameId :: Int,
-  info :: ResponseForWhileTrue,
-  gameField :: Field
-} deriving (Eq, Show, Generic)
+    gameId :: Int,
+    info :: ResponseForWhileTrue,
+    gameField :: Field
+  } 
+  deriving (Eq, Show, Generic)
+
 instance ToJSON Game
 instance FromJSON Game
 
@@ -27,8 +29,8 @@ data ResponseForWhileTrue
   = ResponseForWhileTrue {
     isGameStarted :: Bool,
     playerTurnNumber :: Int,
-    playersCount :: Int
-    -- changes :: Changes
+    playersCount :: Int,
+    changes :: Changes
   }
   deriving (Eq, Show, Generic)
 
@@ -39,7 +41,7 @@ data Changes
   = Changes {
     positionX :: Int,
     positionY :: Int,
-    playerNumber :: Int
+    playerNumber :: Char
   }
   deriving (Eq, Show, Generic)
 
@@ -48,7 +50,8 @@ instance FromJSON Changes
 
 data Field
   = Field {
-  size :: Int
+  size :: Int,
+  board :: [String]
 } deriving (Eq, Show, Generic)
 instance ToJSON Field
 instance FromJSON Field
@@ -63,3 +66,13 @@ data PlayerAndGameInfo
 
 instance ToJSON PlayerAndGameInfo
 instance FromJSON PlayerAndGameInfo
+
+data MakeTurnChanges
+  = MakeTurnChanges {
+    turnChanges :: Changes,
+    turnInfo :: PlayerAndGameInfo
+  }
+  deriving (Eq, Show, Generic)
+
+instance ToJSON MakeTurnChanges
+instance FromJSON MakeTurnChanges

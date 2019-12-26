@@ -16,6 +16,12 @@ export class HomeComponent implements OnInit {
   playerNumber = 0;
   gameNumber = 0;
 
+  playerTurnNumber = 0;
+
+  isYourTurn = false;
+
+  isEnoughPlayers = false;
+
   games = [];
 
   initializeField(size) {
@@ -38,6 +44,7 @@ export class HomeComponent implements OnInit {
     this.http.get<any>('api/getAll')
       .subscribe(x => {
         this.games = x;
+        console.log(x);
       });
   }
 
@@ -49,12 +56,11 @@ export class HomeComponent implements OnInit {
   }
 
   createGame(size) {
-    console.log(size);
     this.http.post<any>(`api/createGame/${size}`, null)
       .subscribe(x => {
-        this.gameNumber = x.gameNumber;
-        this.playerNumber = x.givenPlayerNumber;
-          console.log(x);
+          this.gameNumber = x.gameNumber;
+          this.playerNumber = x.givenPlayerNumber;
+          this.startListening();
         }
       );
   }
@@ -63,6 +69,15 @@ export class HomeComponent implements OnInit {
     let whileTrue = setInterval(() => {
       this.http.get<any>(`api/checkState/${this.gameNumber}`)
         .subscribe(x => {
+          if (this.isGameStarted) {
+            if (x.playerTurnNumber == this.playerNumber) {
+              clearInterval(whileTrue);
+              this.isYourTurn = true;
+            }
+          } else if (x.isGameStarted) {
+            this.isGameStarted = true;
+          }
+          this.isEnoughPlayers = x.playersCount > 1;
         });
     }, 1000);
   }
@@ -77,11 +92,23 @@ export class HomeComponent implements OnInit {
         this.playerNumber = x.givenPlayerNumber;
         this.fieldSize = x.fieldSize;
         this.initializeField(this.fieldSize);
+        this.startListening();
       });
   }
 
   newGame() {
     this.isNewGame = true;
     this.isGameSelected = true;
+  }
+
+  startGame() {
+    this.http.post<any>(`api/startGame/${this.gameNumber}`, null)
+      .subscribe(x => {
+        this.isGameStarted = true;
+      });
+  }
+
+  clickField(i: number, ii: number) {
+    console.log(i, ii);
   }
 }

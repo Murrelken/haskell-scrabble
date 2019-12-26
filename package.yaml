@@ -35,6 +35,7 @@ dependencies:
 - hspec
 - stm
 - http-client
+- containers
 
 library:
   source-dirs: src

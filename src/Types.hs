@@ -27,8 +27,8 @@ data ResponseForWhileTrue
   = ResponseForWhileTrue {
     isGameStarted :: Bool,
     playerTurnNumber :: Int,
-    playersCount :: Int,
-    changes :: Changes
+    playersCount :: Int
+    -- changes :: Changes
   }
   deriving (Eq, Show, Generic)
 
@@ -52,3 +52,13 @@ data Field
 } deriving (Eq, Show, Generic)
 instance ToJSON Field
 instance FromJSON Field
+
+data PlayerAndGameInfo
+  = PlayerAndGameInfo {
+    gameNumber :: Int,
+    givenPlayerNumber :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+instance ToJSON PlayerAndGameInfo
+instance FromJSON PlayerAndGameInfo

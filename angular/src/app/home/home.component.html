@@ -31,10 +31,13 @@
              *ngFor="let c of row; let ii = index"></div>
       </div>
     </div>
-    <div>
+    <div *ngIf="!isGameEnded">
       <div>You're Player{{playerNumber}}</div>
       <div *ngIf="isYourTurn">Your turn</div>
       <div *ngIf="!isYourTurn">Waiting for another player's turn</div>
+    </div>
+    <div class="ended" *ngIf="isGameEnded">
+      Game over. Player{{playerTurnNumber}} won!
     </div>
     <div>
       <div class="circle white"></div> Player 1 <br>
@@ -42,5 +45,3 @@
     </div>
   </div>
 </div>
-
-<button (click)="getAllGames()">GetAll</button>

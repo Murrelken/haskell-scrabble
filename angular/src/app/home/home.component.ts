@@ -15,12 +15,10 @@ export class HomeComponent implements OnInit {
   isGameStarted = false;
   playerNumber = 0;
   gameNumber = 0;
-
   playerTurnNumber = 0;
-
   isYourTurn = false;
-
   isEnoughPlayers = false;
+  isGameEnded = false;
 
   games = [];
 
@@ -77,7 +75,12 @@ export class HomeComponent implements OnInit {
 
             this.changeColor(x.changes.positionX, x.changes.positionY, `${x.changes.playerNumber}`);
 
-            this.playerTurnNumber = x.playerTurnNumber;
+            if (x.isGameEnded) {
+              clearInterval(whileTrue);
+              this.isGameEnded = x.isGameEnded;
+            } else {
+              this.playerTurnNumber = x.playerTurnNumber;
+            }
           } else if (x.isGameStarted) {
             this.isGameStarted = true;
           }
@@ -113,7 +116,7 @@ export class HomeComponent implements OnInit {
   }
 
   clickField(x: number, y: number) {
-    if (this.isYourTurn) {
+    if (this.isYourTurn && !this.isGameEnded) {
       this.http.post<any>(`api/makeTurn`, {
         turnChanges: {
           positionX: x,
@@ -128,9 +131,15 @@ export class HomeComponent implements OnInit {
       }).subscribe(_ => {
         this.changeColor(x, y, `${this.playerNumber}`);
         this.isYourTurn = false;
-        this.startListening();
+        this.http.get<any>(`api/checkIsGameEnded/${this.gameNumber}`)
+          .subscribe(x => {
+            this.isGameEnded = x.is;
+            if (!this.isGameEnded) {
+              this.startListening();
+            }
+          });
       }, err => {
-        alert('You cn\'t make this turn')
+        alert('You cn\'t make this turn');
       });
     }
   }

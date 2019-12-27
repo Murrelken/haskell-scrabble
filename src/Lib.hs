@@ -41,6 +41,7 @@ type CreateGame = "createGame" :> Capture "fieldSize" Int :> Post '[JSON] Player
 type StartGame = "startGame" :> Capture "gameNumber" Int :> Post '[JSON] ()
 type CheckState = "checkState" :> Capture "gameNumber" Int :> Get '[JSON] ResponseForWhileTrue
 type MakeTurn = "makeTurn" :> ReqBody '[JSON] MakeTurnChanges :> Post '[JSON] ()
+type CheckIsGameEnded = "checkIsGameEnded" :> Capture "gameNumber" Int :> Get '[JSON] IsGameEnded
 type API = 
   GetGame :<|>
   GetAllGames :<|>
@@ -49,7 +50,8 @@ type API =
   CreateGame :<|>
   StartGame :<|>
   CheckState :<|>
-  MakeTurn
+  MakeTurn :<|>
+  CheckIsGameEnded
 
 api :: Proxy API
 api = Proxy
@@ -70,7 +72,8 @@ server =
   createGame :<|>
   startGame :<|>
   checkState :<|>
-  makeTurn
+  makeTurn :<|>
+  checkIsGameEnded
 
   where getGame :: Int -> AppM (Maybe Game)
         getGame findId = do
@@ -106,7 +109,7 @@ server =
         createGame size = do
           State{games = p} <- ask
           items <- liftIO $ atomically $ readTVar p
-          let newGame = Game (findLastId items) (ResponseForWhileTrue False 1 1 (Changes 0 0 'n')) (Field size (reverse $ emptyBoard size))
+          let newGame = Game (findLastId items) (ResponseForWhileTrue False False 1 1 (Changes 0 0 'n')) (Field size (reverse $ emptyBoard size))
           liftIO $ atomically $ readTVar p >>= writeTVar p . (newGame :)
           return $ PlayerAndGameInfo (gameId newGame) 1 size
 
@@ -147,6 +150,16 @@ server =
                     liftIO $ atomically $ swapTVar p newItems
                     return ()
                   else throwError err422
+
+        checkIsGameEnded :: Int -> AppM IsGameEnded
+        checkIsGameEnded gameNumber = do
+          State{games = p} <- ask
+          items <- liftIO $ atomically $ readTVar p
+          let game = findGame gameNumber items
+          case game of
+              Nothing -> throwError err422
+              Just gameObj -> do
+                return $ IsGameEnded $ isGameEnded $ info gameObj
 
 nt :: State -> AppM a -> Handler a
 nt s x = runReaderT x s

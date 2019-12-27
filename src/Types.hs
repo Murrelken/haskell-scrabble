@@ -28,6 +28,7 @@ instance FromJSON Game
 data ResponseForWhileTrue
   = ResponseForWhileTrue {
     isGameStarted :: Bool,
+    isGameEnded :: Bool,
     playerTurnNumber :: Int,
     playersCount :: Int,
     changes :: Changes
@@ -76,3 +77,22 @@ data MakeTurnChanges
 
 instance ToJSON MakeTurnChanges
 instance FromJSON MakeTurnChanges
+
+data Point
+  = Point {
+    x :: Int,
+    y :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+instance ToJSON Point
+instance FromJSON Point
+
+data IsGameEnded
+  = IsGameEnded {
+    is :: Bool
+  }
+  deriving (Eq, Show, Generic)
+
+instance ToJSON IsGameEnded
+instance FromJSON IsGameEnded

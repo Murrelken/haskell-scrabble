@@ -53,6 +53,8 @@ type API =
   MakeTurn :<|>
   CheckIsGameEnded
 
+-- api
+
 api :: Proxy API
 api = Proxy
 
@@ -74,6 +76,8 @@ server =
   checkState :<|>
   makeTurn :<|>
   checkIsGameEnded
+
+  -- endpoints implement
 
   where getGame :: Int -> AppM (Maybe Game)
         getGame findId = do
@@ -166,6 +170,8 @@ nt s x = runReaderT x s
 
 app :: State -> Application
 app s = serve api $ hoistServer api (nt s) server
+
+-- run
 
 run :: IO ()
 run = do

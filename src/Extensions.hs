@@ -2,34 +2,40 @@ module Extensions where
 
 import Types
 
+-- to start new game
 findLastId :: [Game] -> Int
 findLastId [] = 1
 findLastId (game:games) = (+) 1 $ gameId game
 
+-- return all games
 returnOnlyAvailableGames :: [Game] -> [Game]
 returnOnlyAvailableGames [] = []
 returnOnlyAvailableGames (g:gs)
   | (isGameStarted $ info g) == False && (playersCount $ info g) < 2 = g : returnOnlyAvailableGames gs
   | otherwise = returnOnlyAvailableGames gs
 
+-- connect to game
 changeGames :: Int -> [Game] -> [Game]
 changeGames _ [] = []
 changeGames gameId ((Game id (ResponseForWhileTrue isStarted isEnded playersTurn playersCount changes) field):xs)
   | gameId == id = (Game id (ResponseForWhileTrue isStarted isEnded playersTurn (playersCount + 1) changes) field) : xs
   | otherwise = (Game id (ResponseForWhileTrue isStarted isEnded playersTurn playersCount changes) field) : changeGames gameId xs
 
+-- start game
 startOneGame :: Int -> [Game] -> [Game]
 startOneGame _ [] = []
 startOneGame gameId ((Game id (ResponseForWhileTrue isStarted isEnded playersTurn playersCount changes) field):xs)
   | gameId == id = (Game id (ResponseForWhileTrue True isEnded playersTurn playersCount changes) field) : xs
   | otherwise = (Game id (ResponseForWhileTrue isStarted isEnded playersTurn playersCount changes) field) : changeGames gameId xs
 
+-- find game
 findGame :: Int -> [Game] -> Maybe Game
 findGame _ [] = Nothing
 findGame findId (game:games)
   | findId == (gameId game) = Just game
   | otherwise = findGame findId games
 
+-- empty board for new game
 emptyBoard :: Int -> [String]
 emptyBoard 0 = []
 emptyBoard size = generateRow size : emptyBoard (size - 1)
@@ -38,6 +44,7 @@ generateRow :: Int -> String
 generateRow 0 = []
 generateRow n = 'n':generateRow (n - 1)
 
+-- make turn
 changeBoardState :: MakeTurnChanges -> [Game] -> [Game]
 changeBoardState makeTurnChanges ((Game id (ResponseForWhileTrue isStarted isEnded playersTurn playersCount changes) field):gs)
   | (gameNumber (turnInfo makeTurnChanges)) == id = do
@@ -46,6 +53,7 @@ changeBoardState makeTurnChanges ((Game id (ResponseForWhileTrue isStarted isEnd
     newGame : gs
   | otherwise = (Game id (ResponseForWhileTrue isStarted isEnded playersTurn playersCount changes) field) : changeBoardState makeTurnChanges gs
 
+-- change field
 setChanges :: Changes -> Field -> Field
 setChanges changes field = do
   let (Field size board) = field
@@ -67,9 +75,11 @@ changeRow y l (cell:cells)
   | y == 0 = l : cells
   | otherwise = cell : changeRow (y - 1) l cells
 
+-- validation
 isTurnAvailable :: Changes -> Field -> Bool
 isTurnAvailable (Changes x y _) (Field _ board) = (board !! x) !! y == 'n'
 
+-- check path in field
 checkIsGameEnded :: Game -> Char -> Bool
 checkIsGameEnded (Game _ _ (Field size board)) playerTurnNumber = do
   let starts = findStartPoints (size - 1) playerTurnNumber (board !! (size - 1)) 0

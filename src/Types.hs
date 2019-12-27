@@ -5,15 +5,6 @@ module Types where
 import Data.Aeson
 import GHC.Generics
 
-
-data Book 
-  = Book {
-  bookId :: Int,
-  bookName :: String
-} deriving (Eq, Show, Generic)
-instance ToJSON Book
-instance FromJSON Book
-
 data Game
   = Game {
     gameId :: Int,

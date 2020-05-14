@@ -1,1 +1,1 @@
-# newGame
+# Scrabble game
